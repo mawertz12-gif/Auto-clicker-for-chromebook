@@ -1,0 +1,117 @@
+javascript:(function(){
+
+if(window.proAutoClicker){alert("Pro Auto Clicker already running");return;}
+window.proAutoClicker=true;
+
+let points=[];
+let intervalId=null;
+let holdMode=false;
+
+const panel=document.createElement("div");
+panel.style.position="fixed";
+panel.style.top="20px";
+panel.style.right="20px";
+panel.style.background="#111";
+panel.style.color="#fff";
+panel.style.padding="12px";
+panel.style.zIndex="999999";
+panel.style.borderRadius="10px";
+panel.style.fontFamily="Arial";
+panel.style.width="200px";
+
+panel.innerHTML=`
+<div style="font-weight:bold;margin-bottom:6px">Pro Auto Clicker</div>
+
+<label>CPS:
+<input id="pac_cps" type="number" value="20" min="1" max="1000" style="width:70px">
+</label>
+
+<br><br>
+
+<button id="pac_add">Add Click Point</button>
+<button id="pac_clear">Clear</button>
+
+<br><br>
+
+<button id="pac_start">Start</button>
+<button id="pac_stop">Stop</button>
+
+<br><br>
+
+<label>
+<input type="checkbox" id="pac_hold">
+Hold Mode
+</label>
+
+<div style="font-size:11px;margin-top:6px">
+Hotkey: ALT + C
+</div>
+`;
+
+document.body.appendChild(panel);
+
+function addPoint(e){
+points.push({x:e.clientX,y:e.clientY});
+alert("Point added. Total: "+points.length);
+document.removeEventListener("click",addPoint);
+}
+
+document.getElementById("pac_add").onclick=()=>{
+alert("Click where you want auto-click.");
+document.addEventListener("click",addPoint);
+};
+
+document.getElementById("pac_clear").onclick=()=>{
+points=[];
+alert("Points cleared");
+};
+
+document.getElementById("pac_start").onclick=start;
+document.getElementById("pac_stop").onclick=stop;
+
+function start(){
+
+if(points.length===0){
+alert("Add at least one click point");
+return;
+}
+
+const cps=parseInt(document.getElementById("pac_cps").value)||20;
+const interval=1000/cps;
+holdMode=document.getElementById("pac_hold").checked;
+
+stop();
+
+intervalId=setInterval(()=>{
+
+points.forEach(p=>{
+const el=document.elementFromPoint(p.x,p.y);
+
+if(!el)return;
+
+if(holdMode){
+el.dispatchEvent(new MouseEvent("mousedown",{bubbles:true}));
+el.dispatchEvent(new MouseEvent("mouseup",{bubbles:true}));
+}else{
+el.click();
+}
+
+});
+
+},interval);
+}
+
+function stop(){
+if(intervalId){
+clearInterval(intervalId);
+intervalId=null;
+}
+}
+
+document.addEventListener("keydown",e=>{
+if(e.altKey && e.key.toLowerCase()==="c"){
+if(intervalId){stop();}else{start();}
+}
+});
+
+})();
